@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "expo export:web",
+  "outputDirectory": "dist",
+  "framework": null
+}

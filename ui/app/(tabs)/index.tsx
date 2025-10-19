@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import FitFilePicker from '@/components/fit-file-picker-simple';
 import WorkoutAnalysis from '@/components/workout-analysis';
 import { Link } from 'expo-router';
+import { config } from '@/constants/config';
 
 export default function HomeScreen() {
   const [workoutData, setWorkoutData] = React.useState<any>(null);
@@ -87,7 +88,7 @@ export default function HomeScreen() {
       <FitFilePicker
         onFileSelected={handleFileSelected}
         onAnalysisComplete={handleAnalysisComplete}
-        serverUrl="http://localhost:3000"
+        serverUrl={config.serverUrl}
       />
 
       <ThemedView style={styles.stepContainer}>
