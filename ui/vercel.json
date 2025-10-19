@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "expo export:web",
+  "buildCommand": "npx expo export --platform web",
   "outputDirectory": "dist",
-  "framework": null
+  "installCommand": "npm install"
 }
