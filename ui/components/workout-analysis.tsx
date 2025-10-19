@@ -1,7 +1,8 @@
-import React from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+import PowerZoneCharts from './power-zone-charts';
 
 interface PowerZoneBalance {
   zone: string;
@@ -45,6 +46,8 @@ interface WorkoutAnalysisProps {
 }
 
 export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
+  const [showCharts, setShowCharts] = useState(false);
+  
   const {
     averagePower,
     thresholdPower,
@@ -108,15 +111,41 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
         )}
       </ThemedView>
 
-      {/* Power Zone Analysis */}
+      {/* Power Zone Analysis Toggle */}
       {powerZoneBalances.length > 0 && (
         <ThemedView style={styles.section}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            Power Zone Analysis
-          </ThemedText>
+          <ThemedView style={styles.toggleContainer}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Power Zone Analysis
+            </ThemedText>
+            
+            <ThemedView style={styles.toggleButtons}>
+              <TouchableOpacity 
+                style={[styles.toggleButton, !showCharts && styles.toggleButtonActive]}
+                onPress={() => setShowCharts(false)}
+              >
+                <ThemedText style={[styles.toggleButtonText, !showCharts && styles.toggleButtonTextActive]}>
+                  📋 Table View
+                </ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.toggleButton, showCharts && styles.toggleButtonActive]}
+                onPress={() => setShowCharts(true)}
+              >
+                <ThemedText style={[styles.toggleButtonText, showCharts && styles.toggleButtonTextActive]}>
+                  📊 Chart View
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
           
-          {powerZoneBalances.map((zone, index) => (
-            <ThemedView key={zone.zone} style={styles.zoneCard}>
+          {showCharts ? (
+            <PowerZoneCharts powerZoneBalances={powerZoneBalances} />
+          ) : (
+            <ThemedView>
+              {powerZoneBalances.map((zone, index) => (
+                <ThemedView key={zone.zone} style={styles.zoneCard}>
               <ThemedView style={styles.zoneHeader}>
                 <ThemedText type="defaultSemiBold" style={styles.zoneName}>
                   {zone.zone} - {zone.description}
@@ -163,6 +192,8 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
               </ThemedView>
             </ThemedView>
           ))}
+            </ThemedView>
+          )}
         </ThemedView>
       )}
     </ScrollView>
@@ -183,6 +214,34 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: 16,
+  },
+  toggleContainer: {
+    alignItems: 'center',
+  },
+  toggleButtons: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+  },
+  toggleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginHorizontal: 2,
+  },
+  toggleButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    opacity: 0.7,
+  },
+  toggleButtonTextActive: {
+    color: '#ffffff',
+    opacity: 1,
   },
   metricRow: {
     flexDirection: 'row',

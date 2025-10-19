@@ -44,9 +44,9 @@ export default function HomeScreen() {
           <ThemedText type="title">Workout Analysis</ThemedText>
           <HelloWave />
         </ThemedView>
-        
+
         <ThemedView style={styles.buttonContainer}>
-          <ThemedText 
+          <ThemedText
             style={styles.backButton}
             onPress={handleBackToUpload}
           >
@@ -72,11 +72,11 @@ export default function HomeScreen() {
         <ThemedText type="title">Workout Viewer</ThemedText>
         <HelloWave />
       </ThemedView>
-      
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Analyze Your Cycling Data</ThemedText>
         <ThemedText style={styles.description}>
-          Upload .fit files (only) from your cycling computer to analyze power, balance, 
+          Upload .fit files (only) from your cycling computer to analyze power, balance,
           torque effectiveness, and pedal smoothness across different power zones.
         </ThemedText>
         <ThemedText style={[styles.description, styles.warningText]}>
@@ -84,8 +84,8 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
 
-      <FitFilePicker 
-        onFileSelected={handleFileSelected} 
+      <FitFilePicker
+        onFileSelected={handleFileSelected}
         onAnalysisComplete={handleAnalysisComplete}
         serverUrl="http://localhost:3000"
       />
