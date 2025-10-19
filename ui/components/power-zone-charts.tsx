@@ -103,20 +103,19 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
     zone.pedalSmoothness?.right || 0
   );
 
-  // Combined line chart data for comparison
+  // Combined line chart data for comparison (torque effectiveness)
   const combinedData = {
     labels: zones,
     datasets: [
       {
         data: leftTorqueData,
-        color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`, // Green
+        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
         strokeWidth: 3,
       },
       {
         data: rightTorqueData,
-        color: (opacity = 1) => `rgba(52, 199, 89, 0.6)`, // Light green
-        strokeWidth: 2,
-        withDots: false,
+        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
+        strokeWidth: 3,
       },
     ],
   };
@@ -142,29 +141,28 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
     datasets: [
       {
         data: leftSmoothnessData,
-        color: (opacity = 1) => `rgba(88, 86, 214, ${opacity})`, // Purple for left
+        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
         strokeWidth: 3,
       },
       {
         data: rightSmoothnessData,
-        color: (opacity = 1) => `rgba(88, 86, 214, 0.6)`, // Light purple for right
-        strokeWidth: 2,
-        withDots: false,
+        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
+        strokeWidth: 3,
       },
     ],
   };
 
-  // Bar chart data for comparison view
+  // Bar chart data for comparison view (separate datasets for L/R to get different colors)
   const torqueBarData = {
     labels: zones,
     datasets: [
       {
         data: leftTorqueData,
-        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
+        color: () => 'rgba(255, 59, 48, 1)', // Red for left
       },
       {
-        data: rightTorqueData, 
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
+        data: rightTorqueData,
+        color: () => 'rgba(0, 122, 255, 1)', // Blue for right
       },
     ],
   };
@@ -236,11 +234,11 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(52, 199, 89, 1)' }]} />
+            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(255, 59, 48, 1)' }]} />
             <ThemedText style={styles.legendText}>Left Leg</ThemedText>
           </ThemedView>
           <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(52, 199, 89, 0.6)' }]} />
+            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(0, 122, 255, 1)' }]} />
             <ThemedText style={styles.legendText}>Right Leg</ThemedText>
           </ThemedView>
         </ThemedView>
@@ -269,11 +267,11 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(88, 86, 214, 1)' }]} />
+            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(255, 59, 48, 1)' }]} />
             <ThemedText style={styles.legendText}>Left Leg</ThemedText>
           </ThemedView>
           <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(88, 86, 214, 0.6)' }]} />
+            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(0, 122, 255, 1)' }]} />
             <ThemedText style={styles.legendText}>Right Leg</ThemedText>
           </ThemedView>
         </ThemedView>
@@ -285,7 +283,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
           📊 Left vs Right Comparison
         </ThemedText>
         <ThemedText style={styles.chartSubtitle}>
-          Direct comparison of torque effectiveness between left and right legs
+          Direct comparison of torque effectiveness between left and right legs (Red = Left, Blue = Right)
         </ThemedText>
         
         <BarChart
@@ -294,23 +292,26 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
           height={220}
           chartConfig={{
             ...torqueChartConfig,
-            barPercentage: 0.7,
+            barPercentage: 0.5, // Make bars thinner to fit two per zone
+            groupSpacing: 0.1, // Reduce spacing between L/R bars within each zone
+            categorySpacing: 0.3, // Increase spacing between zones
           }}
           style={styles.chart}
           yAxisLabel=""
           yAxisSuffix="%"
           xAxisLabel=""
           showValuesOnTopOfBars={true}
+          fromZero={true}
         />
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
             <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(255, 59, 48, 1)' }]} />
-            <ThemedText style={styles.legendText}>Left Leg Torque</ThemedText>
+            <ThemedText style={styles.legendText}>Left Leg</ThemedText>
           </ThemedView>
           <ThemedView style={styles.legendItem}>
             <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(0, 122, 255, 1)' }]} />
-            <ThemedText style={styles.legendText}>Right Leg Torque</ThemedText>
+            <ThemedText style={styles.legendText}>Right Leg</ThemedText>
           </ThemedView>
         </ThemedView>
       </ThemedView>
