@@ -1,8 +1,31 @@
-import React from 'react';
-import { StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { BarChart, LineChart } from 'react-native-chart-kit';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Bar } from 'react-chartjs-2';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface PowerZoneBalance {
   zone: string;
@@ -27,45 +50,92 @@ interface PowerZoneChartsProps {
   powerZoneBalances: PowerZoneBalance[];
 }
 
-const screenWidth = Dimensions.get('window').width;
-const chartWidth = screenWidth - 40; // Account for padding
-
-const chartConfig = {
-  backgroundColor: '#ffffff',
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#f8f9fa',
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(60, 60, 67, ${opacity})`,
-  style: {
-    borderRadius: 12,
-  },
-  propsForBackgroundLines: {
-    strokeDasharray: '',
-    stroke: '#e3e3e3',
-    strokeWidth: 1,
-  },
-  propsForLabels: {
-    fontSize: 12,
-  },
-};
-
-const balanceChartConfig = {
-  ...chartConfig,
-  color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`, // Orange for balance
-};
-
-const torqueChartConfig = {
-  ...chartConfig,
-  color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`, // Green for torque
-};
-
-const smoothnessChartConfig = {
-  ...chartConfig,
-  color: (opacity = 1) => `rgba(88, 86, 214, ${opacity})`, // Purple for smoothness
+// Color scheme constants for consistency
+const COLORS = {
+  leftLeg: 'rgba(255, 59, 48, 1)', // Red
+  leftLegTransparent: 'rgba(255, 59, 48, 0.8)',
+  rightLeg: 'rgba(0, 122, 255, 1)', // Blue
+  rightLegTransparent: 'rgba(0, 122, 255, 0.8)',
+  background: 'rgba(248, 249, 250, 0.8)',
+  grid: 'rgba(227, 227, 227, 1)',
+  text: 'rgba(60, 60, 67, 1)',
 };
 
 export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsProps) {
+  const { width } = useWindowDimensions();
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  
+  // Update screen size detection
+  useEffect(() => {
+    setIsSmallScreen(width < 400);
+  }, [width]);
+  
+  // Common chart options
+  const getChartOptions = (title: string, yAxisLabel?: string) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false, // We'll use custom legends
+      },
+      title: {
+        display: false, // We'll use custom titles
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: COLORS.text,
+        bodyColor: COLORS.text,
+        borderColor: COLORS.grid,
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: COLORS.grid,
+          lineWidth: 1,
+        },
+        ticks: {
+          color: COLORS.text,
+          font: {
+            size: isSmallScreen ? 10 : 12,
+          },
+          callback: function(value: any, index: number) {
+            const label = this.getLabelForValue(value);
+            // Shorten labels on small screens
+            if (isSmallScreen && label.length > 3) {
+              return label.substring(0, 3);
+            }
+            return label;
+          },
+        },
+      },
+      y: {
+        grid: {
+          color: COLORS.grid,
+          lineWidth: 1,
+        },
+        ticks: {
+          color: COLORS.text,
+          font: {
+            size: isSmallScreen ? 10 : 12,
+          },
+          callback: function(value: any) {
+            return yAxisLabel ? `${value}${yAxisLabel}` : value;
+          },
+        },
+      },
+    },
+    layout: {
+      padding: {
+        left: isSmallScreen ? 10 : 20,
+        right: isSmallScreen ? 10 : 20,
+        top: 10,
+        bottom: 10,
+      },
+    },
+  });
+
   if (!powerZoneBalances || powerZoneBalances.length === 0) {
     return (
       <ThemedView style={styles.container}>
@@ -78,126 +148,167 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
 
   // Prepare data for charts
   const zones = powerZoneBalances.map(zone => zone.zone);
-  
+
   // Balance data (Left vs Right)
-  const leftBalanceData = powerZoneBalances.map(zone => 
+  const leftBalanceData = powerZoneBalances.map(zone =>
     zone.leftRightBalance?.left || 0
   );
-  const rightBalanceData = powerZoneBalances.map(zone => 
+  const rightBalanceData = powerZoneBalances.map(zone =>
     zone.leftRightBalance?.right || 0
   );
 
   // Torque effectiveness data
-  const leftTorqueData = powerZoneBalances.map(zone => 
+  const leftTorqueData = powerZoneBalances.map(zone =>
     zone.torqueEffectiveness?.left || 0
   );
-  const rightTorqueData = powerZoneBalances.map(zone => 
+  const rightTorqueData = powerZoneBalances.map(zone =>
     zone.torqueEffectiveness?.right || 0
   );
 
   // Pedal smoothness data
-  const leftSmoothnessData = powerZoneBalances.map(zone => 
+  const leftSmoothnessData = powerZoneBalances.map(zone =>
     zone.pedalSmoothness?.left || 0
   );
-  const rightSmoothnessData = powerZoneBalances.map(zone => 
+  const rightSmoothnessData = powerZoneBalances.map(zone =>
     zone.pedalSmoothness?.right || 0
   );
 
-  // Combined line chart data for comparison (torque effectiveness)
-  const combinedData = {
+  // Chart.js data structures
+  const balanceChartData = {
     labels: zones,
     datasets: [
       {
-        data: leftTorqueData,
-        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
-        strokeWidth: 3,
-      },
-      {
-        data: rightTorqueData,
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
-        strokeWidth: 3,
-      },
-    ],
-  };
-
-  const balanceData = {
-    labels: zones,
-    datasets: [
-      {
+        label: 'Left Leg',
         data: leftBalanceData.map(val => val - 50), // Center around 0 for balance
-        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
-        strokeWidth: 3,
+        borderColor: COLORS.leftLeg,
+        backgroundColor: COLORS.leftLegTransparent,
+        pointBackgroundColor: COLORS.leftLeg,
+        pointBorderColor: COLORS.leftLeg,
+        tension: 0.4,
+        borderWidth: 2,
       },
       {
-        data: rightBalanceData.map(val => val - 50), // Center around 0 for balance  
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
-        strokeWidth: 3,
-      },
-    ],
-  };
-
-  const smoothnessData = {
-    labels: zones,
-    datasets: [
-      {
-        data: leftSmoothnessData,
-        color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`, // Red for left
-        strokeWidth: 3,
-      },
-      {
-        data: rightSmoothnessData,
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Blue for right
-        strokeWidth: 3,
+        label: 'Right Leg',
+        data: rightBalanceData.map(val => val - 50), // Center around 0 for balance
+        borderColor: COLORS.rightLeg,
+        backgroundColor: COLORS.rightLegTransparent,
+        pointBackgroundColor: COLORS.rightLeg,
+        pointBorderColor: COLORS.rightLeg,
+        tension: 0.4,
+        borderWidth: 2,
       },
     ],
   };
 
-  // Bar chart data for comparison view (separate datasets for L/R to get different colors)
-  const torqueBarData = {
+  const torqueChartData = {
     labels: zones,
     datasets: [
       {
+        label: 'Left Leg',
         data: leftTorqueData,
-        color: () => 'rgba(255, 59, 48, 1)', // Red for left
+        borderColor: COLORS.leftLeg,
+        backgroundColor: COLORS.leftLegTransparent,
+        pointBackgroundColor: COLORS.leftLeg,
+        pointBorderColor: COLORS.leftLeg,
+        tension: 0.4,
+        borderWidth: 2,
       },
       {
+        label: 'Right Leg',
         data: rightTorqueData,
-        color: () => 'rgba(0, 122, 255, 1)', // Blue for right
+        borderColor: COLORS.rightLeg,
+        backgroundColor: COLORS.rightLegTransparent,
+        pointBackgroundColor: COLORS.rightLeg,
+        pointBorderColor: COLORS.rightLeg,
+        tension: 0.4,
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const smoothnessChartData = {
+    labels: zones,
+    datasets: [
+      {
+        label: 'Left Leg',
+        data: leftSmoothnessData,
+        borderColor: COLORS.leftLeg,
+        backgroundColor: COLORS.leftLegTransparent,
+        pointBackgroundColor: COLORS.leftLeg,
+        pointBorderColor: COLORS.leftLeg,
+        tension: 0.4,
+        borderWidth: 2,
+      },
+      {
+        label: 'Right Leg',
+        data: rightSmoothnessData,
+        borderColor: COLORS.rightLeg,
+        backgroundColor: COLORS.rightLegTransparent,
+        pointBackgroundColor: COLORS.rightLeg,
+        pointBorderColor: COLORS.rightLeg,
+        tension: 0.4,
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const torqueBarChartData = {
+    labels: zones,
+    datasets: [
+      {
+        label: 'Left Leg',
+        data: leftTorqueData,
+        backgroundColor: COLORS.leftLeg,
+        borderColor: COLORS.leftLeg,
+        borderWidth: 1,
+      },
+      {
+        label: 'Right Leg',
+        data: rightTorqueData,
+        backgroundColor: COLORS.rightLeg,
+        borderColor: COLORS.rightLeg,
+        borderWidth: 1,
       },
     ],
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <ThemedView style={styles.section}>
-        <ThemedText type="title" style={styles.sectionTitle}>
+      <ThemedView style={[styles.section, isSmallScreen && styles.sectionSmall]}>
+        <ThemedText type="title" style={[styles.sectionTitle, isSmallScreen && styles.titleSmall]}>
           📊 Power Zone Analysis Charts
         </ThemedText>
       </ThemedView>
 
       {/* Power Balance Chart */}
-      <ThemedView style={styles.chartContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           ⚖️ Left/Right Power Balance by Zone
         </ThemedText>
-        <ThemedText style={styles.chartSubtitle}>
+        <ThemedText style={[styles.chartSubtitle, isSmallScreen && styles.chartSubtitleSmall]}>
           Deviation from 50/50 balance (Red = Left bias, Blue = Right bias)
         </ThemedText>
-        
-        <LineChart
-          data={balanceData}
-          width={chartWidth}
-          height={220}
-          chartConfig={{
-            ...balanceChartConfig,
-            formatYLabel: (value) => `${(parseFloat(value) + 50).toFixed(0)}%`,
-          }}
-          bezier
-          style={styles.chart}
-          withVerticalLines={false}
-          withHorizontalLines={true}
-          fromZero={false}
-        />
+
+        <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
+          <Line 
+            data={balanceChartData}
+            options={{
+              ...getChartOptions('Power Balance', '%'),
+              scales: {
+                ...getChartOptions('Power Balance', '%').scales,
+                y: {
+                  ...getChartOptions('Power Balance', '%').scales.y,
+                  ticks: {
+                    ...getChartOptions('Power Balance', '%').scales.y.ticks,
+                    callback: function(value: any) {
+                      return `${(parseFloat(value) + 50).toFixed(0)}%`;
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </ThemedView>
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
@@ -212,25 +323,20 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Torque Effectiveness Chart */}
-      <ThemedView style={styles.chartContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           🔧 Torque Effectiveness by Zone
         </ThemedText>
-        <ThemedText style={styles.chartSubtitle}>
+        <ThemedText style={[styles.chartSubtitle, isSmallScreen && styles.chartSubtitleSmall]}>
           How effectively you apply power through the pedal stroke (higher is better)
         </ThemedText>
-        
-        <LineChart
-          data={combinedData}
-          width={chartWidth}
-          height={220}
-          chartConfig={torqueChartConfig}
-          bezier
-          style={styles.chart}
-          withVerticalLines={false}
-          withHorizontalLines={true}
-          yAxisSuffix="%"
-        />
+
+        <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
+          <Line 
+            data={torqueChartData}
+            options={getChartOptions('Torque Effectiveness', '%')}
+          />
+        </ThemedView>
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
@@ -245,25 +351,20 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Pedal Smoothness Chart */}
-      <ThemedView style={styles.chartContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           ⚪ Pedal Smoothness by Zone
         </ThemedText>
-        <ThemedText style={styles.chartSubtitle}>
+        <ThemedText style={[styles.chartSubtitle, isSmallScreen && styles.chartSubtitleSmall]}>
           How smooth your power delivery is throughout the pedal stroke
         </ThemedText>
-        
-        <LineChart
-          data={smoothnessData}
-          width={chartWidth}
-          height={220}
-          chartConfig={smoothnessChartConfig}
-          bezier
-          style={styles.chart}
-          withVerticalLines={false}
-          withHorizontalLines={true}
-          yAxisSuffix="%"
-        />
+
+        <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
+          <Line 
+            data={smoothnessChartData}
+            options={getChartOptions('Pedal Smoothness', '%')}
+          />
+        </ThemedView>
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
@@ -278,31 +379,35 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Comparison Bar Chart */}
-      <ThemedView style={styles.chartContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           📊 Left vs Right Comparison
         </ThemedText>
-        <ThemedText style={styles.chartSubtitle}>
+        <ThemedText style={[styles.chartSubtitle, isSmallScreen && styles.chartSubtitleSmall]}>
           Direct comparison of torque effectiveness between left and right legs (Red = Left, Blue = Right)
         </ThemedText>
-        
-        <BarChart
-          data={torqueBarData}
-          width={chartWidth}
-          height={220}
-          chartConfig={{
-            ...torqueChartConfig,
-            barPercentage: 0.5, // Make bars thinner to fit two per zone
-            groupSpacing: 0.1, // Reduce spacing between L/R bars within each zone
-            categorySpacing: 0.3, // Increase spacing between zones
-          }}
-          style={styles.chart}
-          yAxisLabel=""
-          yAxisSuffix="%"
-          xAxisLabel=""
-          showValuesOnTopOfBars={true}
-          fromZero={true}
-        />
+
+        <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
+          <Bar 
+            data={torqueBarChartData}
+            options={{
+              ...getChartOptions('Torque Comparison', '%'),
+              plugins: {
+                ...getChartOptions('Torque Comparison', '%').plugins,
+                legend: {
+                  display: false, // We use custom legend
+                },
+              },
+              scales: {
+                ...getChartOptions('Torque Comparison', '%').scales,
+                y: {
+                  ...getChartOptions('Torque Comparison', '%').scales.y,
+                  beginAtZero: true,
+                },
+              },
+            }}
+          />
+        </ThemedView>
 
         <ThemedView style={styles.legend}>
           <ThemedView style={styles.legendItem}>
@@ -317,20 +422,20 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Performance Insights */}
-      <ThemedView style={styles.insightsContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.insightsContainer, isSmallScreen && styles.insightsContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           💡 Performance Insights
         </ThemedText>
-        
+
         {(() => {
           const avgTorqueLeft = leftTorqueData.reduce((a, b) => a + b, 0) / leftTorqueData.length;
           const avgTorqueRight = rightTorqueData.reduce((a, b) => a + b, 0) / rightTorqueData.length;
           const avgSmoothLeft = leftSmoothnessData.reduce((a, b) => a + b, 0) / leftSmoothnessData.length;
           const avgSmoothRight = rightSmoothnessData.reduce((a, b) => a + b, 0) / rightSmoothnessData.length;
-          
+
           const torqueDiff = Math.abs(avgTorqueLeft - avgTorqueRight);
           const smoothDiff = Math.abs(avgSmoothLeft - avgSmoothRight);
-          
+
           return (
             <ThemedView style={styles.insightsGrid}>
               <ThemedView style={styles.insightCard}>
@@ -342,7 +447,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   {torqueDiff.toFixed(1)}% difference between legs
                 </ThemedText>
               </ThemedView>
-              
+
               <ThemedView style={styles.insightCard}>
                 <ThemedText style={styles.insightTitle}>⚪ Smoothness</ThemedText>
                 <ThemedText style={styles.insightValue}>
@@ -352,7 +457,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   Avg: L:{avgSmoothLeft.toFixed(1)}% R:{avgSmoothRight.toFixed(1)}%
                 </ThemedText>
               </ThemedView>
-              
+
               <ThemedView style={styles.insightCard}>
                 <ThemedText style={styles.insightTitle}>📊 Consistency</ThemedText>
                 <ThemedText style={styles.insightValue}>
@@ -368,11 +473,11 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Summary Table */}
-      <ThemedView style={styles.summaryContainer}>
-        <ThemedText type="subtitle" style={styles.chartTitle}>
+      <ThemedView style={[styles.summaryContainer, isSmallScreen && styles.summaryContainerSmall]}>
+        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
           📋 Zone Summary
         </ThemedText>
-        
+
         {powerZoneBalances.map((zone, index) => (
           <ThemedView key={zone.zone} style={styles.summaryRow}>
             <ThemedView style={styles.zoneInfo}>
@@ -380,7 +485,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
               <ThemedText style={styles.zoneDesc}>{zone.description}</ThemedText>
               <ThemedText style={styles.zonePower}>{zone.powerRange}</ThemedText>
             </ThemedView>
-            
+
             <ThemedView style={styles.metricsGrid}>
               {zone.leftRightBalance && (
                 <ThemedView style={styles.metricCell}>
@@ -390,7 +495,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   </ThemedText>
                 </ThemedView>
               )}
-              
+
               {zone.torqueEffectiveness && (
                 <ThemedView style={styles.metricCell}>
                   <ThemedText style={styles.metricLabel}>Torque</ThemedText>
@@ -399,7 +504,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   </ThemedText>
                 </ThemedView>
               )}
-              
+
               {zone.pedalSmoothness && (
                 <ThemedView style={styles.metricCell}>
                   <ThemedText style={styles.metricLabel}>Smoothness</ThemedText>
@@ -408,7 +513,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   </ThemedText>
                 </ThemedView>
               )}
-              
+
               <ThemedView style={styles.metricCell}>
                 <ThemedText style={styles.metricLabel}>Samples</ThemedText>
                 <ThemedText style={styles.metricValue}>{zone.sampleCount}</ThemedText>
@@ -429,9 +534,16 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  sectionSmall: {
+    padding: 5,
+  },
   sectionTitle: {
     textAlign: 'center',
     marginBottom: 8,
+  },
+  titleSmall: {
+    fontSize: 18,
+    marginBottom: 4,
   },
   chartContainer: {
     margin: 20,
@@ -444,9 +556,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  chartContainerSmall: {
+    margin: 5,
+    marginHorizontal: 8,
+    padding: 8,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+  },
   chartTitle: {
     marginBottom: 8,
     textAlign: 'center',
+  },
+  chartTitleSmall: {
+    fontSize: 14,
+    marginBottom: 4,
   },
   chartSubtitle: {
     fontSize: 14,
@@ -455,9 +578,28 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 18,
   },
+  chartSubtitleSmall: {
+    fontSize: 11,
+    marginBottom: 10,
+    lineHeight: 14,
+  },
   chart: {
     marginVertical: 8,
     borderRadius: 12,
+  },
+  chartSmall: {
+    marginVertical: 4,
+    marginHorizontal: -4,
+    borderRadius: 8,
+  },
+  chartWrapper: {
+    height: 220,
+    width: '100%',
+    marginVertical: 8,
+  },
+  chartWrapperSmall: {
+    height: 180,
+    marginVertical: 4,
   },
   legend: {
     flexDirection: 'row',
@@ -492,6 +634,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#c3e6c3',
+  },
+  insightsContainerSmall: {
+    margin: 5,
+    marginHorizontal: 8,
+    padding: 8,
+    paddingHorizontal: 4,
+    borderRadius: 8,
   },
   insightsGrid: {
     flexDirection: 'row',
@@ -536,6 +685,13 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
+  },
+  summaryContainerSmall: {
+    margin: 5,
+    marginHorizontal: 8,
+    padding: 8,
+    paddingHorizontal: 4,
+    borderRadius: 8,
   },
   summaryRow: {
     flexDirection: 'row',

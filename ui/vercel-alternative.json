@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "npx create-expo-app@latest --template blank-typescript temp && cd temp && npm install && npx expo export --platform web && cp -r dist/* ../",
+  "outputDirectory": "dist"
+}

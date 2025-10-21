@@ -47,7 +47,7 @@ interface WorkoutAnalysisProps {
 
 export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
   const [showCharts, setShowCharts] = useState(false);
-  
+
   const {
     averagePower,
     thresholdPower,
@@ -70,7 +70,7 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Overall Performance
         </ThemedText>
-        
+
         <ThemedView style={styles.metricRow}>
           <ThemedText style={styles.metricLabel}>🚴 Average Power:</ThemedText>
           <ThemedText style={styles.metricValue}>{averagePower}W</ThemedText>
@@ -118,9 +118,9 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
             <ThemedText type="subtitle" style={styles.sectionTitle}>
               Power Zone Analysis
             </ThemedText>
-            
+
             <ThemedView style={styles.toggleButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.toggleButton, !showCharts && styles.toggleButtonActive]}
                 onPress={() => setShowCharts(false)}
               >
@@ -128,8 +128,8 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
                   📋 Table View
                 </ThemedText>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.toggleButton, showCharts && styles.toggleButtonActive]}
                 onPress={() => setShowCharts(true)}
               >
@@ -139,59 +139,59 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
               </TouchableOpacity>
             </ThemedView>
           </ThemedView>
-          
+
           {showCharts ? (
             <PowerZoneCharts powerZoneBalances={powerZoneBalances} />
           ) : (
             <ThemedView>
               {powerZoneBalances.map((zone, index) => (
                 <ThemedView key={zone.zone} style={styles.zoneCard}>
-              <ThemedView style={styles.zoneHeader}>
-                <ThemedText type="defaultSemiBold" style={styles.zoneName}>
-                  {zone.zone} - {zone.description}
-                </ThemedText>
-                <ThemedText style={styles.zonePower}>
-                  {zone.powerRange}
-                </ThemedText>
-              </ThemedView>
-
-              <ThemedView style={styles.zoneMetrics}>
-                {zone.leftRightBalance && (
-                  <ThemedView style={styles.zoneMetric}>
-                    <ThemedText style={styles.zoneMetricLabel}>⚖️ Balance:</ThemedText>
-                    <ThemedText style={styles.zoneMetricValue}>
-                      L: {zone.leftRightBalance.left}% | R: {zone.leftRightBalance.right}%
+                  <ThemedView style={styles.zoneHeader}>
+                    <ThemedText type="defaultSemiBold" style={styles.zoneName}>
+                      {zone.zone} - {zone.description}
+                    </ThemedText>
+                    <ThemedText style={styles.zonePower}>
+                      {zone.powerRange}
                     </ThemedText>
                   </ThemedView>
-                )}
 
-                {zone.torqueEffectiveness && (
-                  <ThemedView style={styles.zoneMetric}>
-                    <ThemedText style={styles.zoneMetricLabel}>🔧 Torque:</ThemedText>
-                    <ThemedText style={styles.zoneMetricValue}>
-                      L: {zone.torqueEffectiveness.left}% | R: {zone.torqueEffectiveness.right}%
-                    </ThemedText>
+                  <ThemedView style={styles.zoneMetrics}>
+                    {zone.leftRightBalance && (
+                      <ThemedView style={styles.zoneMetric}>
+                        <ThemedText style={styles.zoneMetricLabel}>⚖️ Balance:</ThemedText>
+                        <ThemedText style={styles.zoneMetricValue}>
+                          L: {zone.leftRightBalance.left}% | R: {zone.leftRightBalance.right}%
+                        </ThemedText>
+                      </ThemedView>
+                    )}
+
+                    {zone.torqueEffectiveness && (
+                      <ThemedView style={styles.zoneMetric}>
+                        <ThemedText style={styles.zoneMetricLabel}>🔧 Torque:</ThemedText>
+                        <ThemedText style={styles.zoneMetricValue}>
+                          L: {zone.torqueEffectiveness.left}% | R: {zone.torqueEffectiveness.right}%
+                        </ThemedText>
+                      </ThemedView>
+                    )}
+
+                    {zone.pedalSmoothness && (
+                      <ThemedView style={styles.zoneMetric}>
+                        <ThemedText style={styles.zoneMetricLabel}>⚪ Smoothness:</ThemedText>
+                        <ThemedText style={styles.zoneMetricValue}>
+                          L: {zone.pedalSmoothness.left}% | R: {zone.pedalSmoothness.right}%
+                        </ThemedText>
+                      </ThemedView>
+                    )}
+
+                    <ThemedView style={styles.zoneMetric}>
+                      <ThemedText style={styles.zoneMetricLabel}>📊 Samples:</ThemedText>
+                      <ThemedText style={styles.zoneMetricValue}>
+                        {zone.sampleCount}
+                      </ThemedText>
+                    </ThemedView>
                   </ThemedView>
-                )}
-
-                {zone.pedalSmoothness && (
-                  <ThemedView style={styles.zoneMetric}>
-                    <ThemedText style={styles.zoneMetricLabel}>⚪ Smoothness:</ThemedText>
-                    <ThemedText style={styles.zoneMetricValue}>
-                      L: {zone.pedalSmoothness.left}% | R: {zone.pedalSmoothness.right}%
-                    </ThemedText>
-                  </ThemedView>
-                )}
-
-                <ThemedView style={styles.zoneMetric}>
-                  <ThemedText style={styles.zoneMetricLabel}>📊 Samples:</ThemedText>
-                  <ThemedText style={styles.zoneMetricValue}>
-                    {zone.sampleCount}
-                  </ThemedText>
                 </ThemedView>
-              </ThemedView>
-            </ThemedView>
-          ))}
+              ))}
             </ThemedView>
           )}
         </ThemedView>
@@ -203,7 +203,8 @@ export default function WorkoutAnalysis({ workoutData }: WorkoutAnalysisProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 0,
+    width: '100%',
   },
   section: {
     marginBottom: 24,
