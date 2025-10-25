@@ -14,6 +14,8 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+import { COLORS } from '@/styles/color-theme';
+import ChartTemplate from './chart-template';
 
 // Register Chart.js components
 ChartJS.register(
@@ -50,26 +52,16 @@ interface PowerZoneChartsProps {
   powerZoneBalances: PowerZoneBalance[];
 }
 
-// Color scheme constants for consistency
-const COLORS = {
-  leftLeg: 'rgba(255, 59, 48, 1)', // Red
-  leftLegTransparent: 'rgba(255, 59, 48, 0.8)',
-  rightLeg: 'rgba(0, 122, 255, 1)', // Blue
-  rightLegTransparent: 'rgba(0, 122, 255, 0.8)',
-  background: 'rgba(248, 249, 250, 0.8)',
-  grid: 'rgba(227, 227, 227, 1)',
-  text: 'rgba(60, 60, 67, 1)',
-};
 
 export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsProps) {
   const { width } = useWindowDimensions();
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  
+
   // Update screen size detection
   useEffect(() => {
     setIsSmallScreen(width < 400);
   }, [width]);
-  
+
   // Common chart options
   const getChartOptions = (title: string, yAxisLabel?: string) => ({
     responsive: true,
@@ -100,7 +92,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
           font: {
             size: isSmallScreen ? 10 : 12,
           },
-          callback: function(value: any, index: number) {
+          callback: function (value: any, index: number) {
             const label = this.getLabelForValue(value);
             // Shorten labels on small screens
             if (isSmallScreen && label.length > 3) {
@@ -120,7 +112,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
           font: {
             size: isSmallScreen ? 10 : 12,
           },
-          callback: function(value: any) {
+          callback: function (value: any) {
             return yAxisLabel ? `${value}${yAxisLabel}` : value;
           },
         },
@@ -290,7 +282,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
         </ThemedText>
 
         <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
-          <Line 
+          <Line
             data={balanceChartData}
             options={{
               ...getChartOptions('Power Balance', '%'),
@@ -300,7 +292,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
                   ...getChartOptions('Power Balance', '%').scales.y,
                   ticks: {
                     ...getChartOptions('Power Balance', '%').scales.y.ticks,
-                    callback: function(value: any) {
+                    callback: function (value: any) {
                       return `${(parseFloat(value) + 50).toFixed(0)}%`;
                     },
                   },
@@ -323,32 +315,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
       </ThemedView>
 
       {/* Torque Effectiveness Chart */}
-      <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
-        <ThemedText type="subtitle" style={[styles.chartTitle, isSmallScreen && styles.chartTitleSmall]}>
-          🔧 Torque Effectiveness by Zone
-        </ThemedText>
-        <ThemedText style={[styles.chartSubtitle, isSmallScreen && styles.chartSubtitleSmall]}>
-          How effectively you apply power through the pedal stroke (higher is better)
-        </ThemedText>
-
-        <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
-          <Line 
-            data={torqueChartData}
-            options={getChartOptions('Torque Effectiveness', '%')}
-          />
-        </ThemedView>
-
-        <ThemedView style={styles.legend}>
-          <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(255, 59, 48, 1)' }]} />
-            <ThemedText style={styles.legendText}>Left Leg</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.legendItem}>
-            <ThemedView style={[styles.legendDot, { backgroundColor: 'rgba(0, 122, 255, 1)' }]} />
-            <ThemedText style={styles.legendText}>Right Leg</ThemedText>
-          </ThemedView>
-        </ThemedView>
-      </ThemedView>
+      <ChartTemplate title="Torque Effectiveness" subtitle="How effectively you apply power through the pedal stroke (higher is better)" isSmallScreen={isSmallScreen} styles={styles} data={torqueChartData} />
 
       {/* Pedal Smoothness Chart */}
       <ThemedView style={[styles.chartContainer, isSmallScreen && styles.chartContainerSmall]}>
@@ -360,7 +327,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
         </ThemedText>
 
         <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
-          <Line 
+          <Line
             data={smoothnessChartData}
             options={getChartOptions('Pedal Smoothness', '%')}
           />
@@ -388,7 +355,7 @@ export default function PowerZoneCharts({ powerZoneBalances }: PowerZoneChartsPr
         </ThemedText>
 
         <ThemedView style={[styles.chartWrapper, isSmallScreen && styles.chartWrapperSmall]}>
-          <Bar 
+          <Bar
             data={torqueBarChartData}
             options={{
               ...getChartOptions('Torque Comparison', '%'),
